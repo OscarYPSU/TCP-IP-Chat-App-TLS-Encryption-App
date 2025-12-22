@@ -1,0 +1,1 @@
+Deployed and configured a Ubuntu server on AWS EC2 instance and put my server code in it using SSH from my local machines to access AWS instance.
