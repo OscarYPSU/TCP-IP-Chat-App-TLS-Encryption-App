@@ -27,14 +27,14 @@ int main() {
     serv_addr.sin_port = htons(PORT);
 
     // Convert IPv4 address from human readable string to machine readable bytes
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, "192.168.1.187", &serv_addr.sin_addr) <= 0) { // change cp base on server ip address
         printf("Invalid address / Address not supported\n");
         return -1;
     }
 
     // Connect to server
     if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-        printf("Connection Failed\n");
+        perror("Connection Failed");
         return -1;
     }
 
