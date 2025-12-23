@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+*.pem
+=======
 Server
 
 client 
@@ -5,5 +8,9 @@ client
 main
 
 server
+<<<<<<< HEAD
 
 Client
+=======
+>>>>>>> 1696920de631b584353d5cf1aaa1934061b0fbad
+>>>>>>> 5f51083ec42678bb3f5fcd36319efa8ae527d520
