@@ -81,6 +81,9 @@ int main() {
         printf("Client connected and running a thread!\n");
     }
 
+    while(1){
+        
+    }
 
     close(server_fd);
     return 0;
