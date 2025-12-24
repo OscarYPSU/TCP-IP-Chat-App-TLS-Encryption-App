@@ -4,16 +4,44 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+// threading lib
+#include <pthread.h>
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
-int main() {
-    int server_fd, client_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+// server lsitening sockets configs
+int server_fd, client_socket;
+struct sockaddr_in address;
+int addrlen = sizeof(address);
+char buffer[BUFFER_SIZE];
+
+void *handleClient(void *clientInputSocket){
+
+    int sock = *((int *)clientInputSocket);  // get the actual socket
+    free(clientInputSocket);                 // free the heap memory
     char buffer[BUFFER_SIZE];
 
+    while (1) {
+        memset(buffer, 0, BUFFER_SIZE);
 
+        // once client sends message
+        int valread = read(sock, buffer, BUFFER_SIZE);
+        if (valread <= 0) {
+            printf("Client disconnected.\n");
+            break;
+        }
+        printf("Client: %s\n", buffer);
+
+        // Send message to client
+        printf("You: ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+        buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
+        send(sock, buffer, strlen(buffer), 0);
+    }
+}
+
+int main() {
     // creates the socket for server
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("SOCKET FAILED:SERVER");
@@ -36,36 +64,19 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("SERVER STARTED LISTENING\n ON PORT: ", PORT);
+    printf("SERVER STARTED LISTENING\n");
 
     // Accept client
     if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
         perror("Accept failed");
         exit(EXIT_FAILURE);
+    } else {
+        // set client socket off to a threading
+        pthread_t thread;
+        pthread_create(&thread, NULL, handleClient, &client_socket);
+        pthread_join(thread, NULL);
+        printf("Client connected and running a thread!\n");
     }
-
-    printf("Client connected!\n");
-
-    while (1) {
-        memset(buffer, 0, BUFFER_SIZE);
-
-        // once client sends message
-        int valread = read(client_socket, buffer, BUFFER_SIZE);
-        if (valread <= 0) {
-            printf("Client disconnected.\n");
-            break;
-        }
-        printf("Client: %s\n", buffer);
-
-        // Send message to client
-        printf("You: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
-        send(client_socket, buffer, strlen(buffer), 0);
-
-    }
-
-    close(client_socket);
     close(server_fd);
     return 0;
 }
