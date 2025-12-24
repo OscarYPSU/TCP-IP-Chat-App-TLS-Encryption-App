@@ -19,7 +19,6 @@ char buffer[BUFFER_SIZE];
 void *handleClient(void *clientInputSocket){
 
     int sock = *((int *)clientInputSocket);  // get the actual socket
-    free(clientInputSocket);                 // free the heap memory
     char buffer[BUFFER_SIZE];
 
     while (1) {
@@ -34,10 +33,10 @@ void *handleClient(void *clientInputSocket){
         printf("Client: %s\n", buffer);
 
         // Send message to client
-        printf("You: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
-        send(sock, buffer, strlen(buffer), 0);
+        //printf("You: ");
+        //fgets(buffer, BUFFER_SIZE, stdin);
+        //buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
+        //send(sock, buffer, strlen(buffer), 0);
     }
 }
 
@@ -71,12 +70,18 @@ int main() {
         perror("Accept failed");
         exit(EXIT_FAILURE);
     } else {
+        // creates malloc for own memeory space for client_socket
+        int *pclient = malloc(sizeof(int));
+        *pclient = client_socket;
+
         // set client socket off to a threading
         pthread_t thread;
-        pthread_create(&thread, NULL, handleClient, &client_socket);
-        pthread_join(thread, NULL);
+        pthread_create(&thread, NULL, handleClient, pclient);
+        pthread_detach(thread);
         printf("Client connected and running a thread!\n");
     }
+
+
     close(server_fd);
     return 0;
 }
