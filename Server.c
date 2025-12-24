@@ -65,24 +65,23 @@ int main() {
 
     printf("SERVER STARTED LISTENING\n");
 
-    // Accept client
-    if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
-        perror("Accept failed");
-        exit(EXIT_FAILURE);
-    } else {
-        // creates malloc for own memeory space for client_socket
-        int *pclient = malloc(sizeof(int));
-        *pclient = client_socket;
-
-        // set client socket off to a threading
-        pthread_t thread;
-        pthread_create(&thread, NULL, handleClient, pclient);
-        pthread_detach(thread);
-        printf("Client connected and running a thread!\n");
-    }
 
     while(1){
-        
+        // Accept client
+        if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
+            perror("Accept failed");
+            exit(EXIT_FAILURE);
+        } else {
+            // creates malloc for own memeory space for client_socket
+            int *pclient = malloc(sizeof(int));
+            *pclient = client_socket;
+
+            // set client socket off to a threading
+            pthread_t thread;
+            pthread_create(&thread, NULL, handleClient, pclient);
+            pthread_detach(thread);
+            printf("Client connected and running a thread!\n");
+        }
     }
 
     close(server_fd);
