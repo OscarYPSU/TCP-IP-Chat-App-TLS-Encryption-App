@@ -48,13 +48,13 @@ int main() {
         send(sock, buffer, strlen(buffer), 0);
 
         // Receive message from server
-        memset(buffer, 0, BUFFER_SIZE);
-        int valread = read(sock, buffer, BUFFER_SIZE);
-        if (valread <= 0) {
-            printf("Server disconnected.\n");
-            break;
-        }
-        printf("Server: %s\n", buffer);
+        //memset(buffer, 0, BUFFER_SIZE);
+        //int valread = read(sock, buffer, BUFFER_SIZE);
+        //if (valread <= 0) {
+        //    printf("Server disconnected.\n");
+        //    break;
+        //}
+        //printf("Server: %s\n", buffer);
     }
 
     close(sock);
