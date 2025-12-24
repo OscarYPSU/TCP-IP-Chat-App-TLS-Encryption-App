@@ -57,6 +57,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    while(1){
     // starts listening for any user client
     if (listen(server_fd, 3) < 0) { // n = number of clients can queue to connect to server
         perror("Listen failed");
@@ -65,8 +66,6 @@ int main() {
 
     printf("SERVER STARTED LISTENING\n");
 
-
-    while(1){
         // Accept client
         if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
             perror("Accept failed");
