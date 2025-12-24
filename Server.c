@@ -7,6 +7,11 @@
 // threading lib
 #include <pthread.h>
 
+// TLS encryption
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/opensslv.h>
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
@@ -41,6 +46,21 @@ void *handleClient(void *clientInputSocket){
 }
 
 int main() {
+    
+    // intializing the OpenSSL lib (TLS)
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_ssl_algorithms();
+
+    const SSL_METHOD *method = TLS_server_method(); // Server intialization for TLS
+    SSL_CTX *ctx = SSL_CTX_new(method); // TLS configuration that is sepcial to this server, used for decryptina nd encrypting
+    if (!ctx) {
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
+
+
+
     // creates the socket for server
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("SOCKET FAILED:SERVER");
