@@ -1,1 +1,5 @@
 Deployed and configured a Ubuntu server on AWS EC2 instance and put my server code in it using SSH from my local machines to access AWS instance.
+
+Added server handling of mutiple client socket being connected to server using threading. Able to handle multiple messages at the same time
+Challenges: had some issue about how the pointeres deferenceing and memory addres worked in c but looked up resources and pracrtices a bit on easier code. neede this skill for setting pthread in c
+Chalenges: had trouble witht he server having a block somewhere int he code preventing from further process even though i was utilizing threading. Problemw as i was taking input as a server which waits until user has given input to server for server to resume operation. learned that SERVER should never directly take input and put a block on the code as a lot of threading and set up requires server to be ran at all times 
