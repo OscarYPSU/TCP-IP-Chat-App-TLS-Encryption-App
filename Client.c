@@ -59,6 +59,19 @@ int main() {
     }
     printf("TLS handshake successful with %s\n", SSL_get_cipher(ssl));
 
+    
+    // authenitcates user with server
+    char name[50];
+    printf("Enter a name: ");
+    fgets(name, sizeof(name), stdin);
+    name[strcspn(name, "\n")] = 0; // removes \n from name
+    char login_prefix[] = "LOGIN#";
+    char temp[strlen(name) + strlen(login_prefix) + 1]; // plus 1 is for the null terminator
+    strcpy(temp, login_prefix);
+    strcat(temp, name);
+    SSL_write(ssl, temp, strlen(temp));
+    SSL_write(ssl, name, strlen(name));
+
     while (1) {
         // Send message to server
         printf("You: ");

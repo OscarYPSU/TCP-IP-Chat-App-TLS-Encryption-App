@@ -59,6 +59,15 @@ void *handleClient(void *args){
             printf("Client disconnected.\n");
             break;
         }
+        
+        // check if the message is a authentication
+        char login_prefix[] = "LOGIN#";
+        char *ptr = strstr(buffer, login_prefix);
+        if(ptr != NULL){
+            ptr += strlen(login_prefix); // skip the word itself
+            printf("%s is connected to server", ptr);
+        }
+
         printf("Client: %s\n", buffer);
 
         // Send message to client
