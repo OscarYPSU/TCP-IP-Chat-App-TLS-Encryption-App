@@ -9,10 +9,20 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
 int main() {
+    // intializing the OpenSSL lib (TLS)
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_ssl_algorithms();
+    SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+    if (!ctx) { ERR_print_errors_fp(stderr); exit(EXIT_FAILURE); }
+
     int sock = 0;
     struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE];
@@ -27,7 +37,7 @@ int main() {
     serv_addr.sin_port = htons(PORT);
 
     // Convert IPv4 address from human readable string to machine readable bytes
-    if (inet_pton(AF_INET, "18.218.219.40", &serv_addr.sin_addr) <= 0) { // change cp base on server ip address (18.218.219.40 for AWS EC2 public IP)
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) { // change cp base on server ip address (18.218.219.40 for AWS EC2 public IP)
         printf("Invalid address / Address not supported\n");
         return -1;
     }
@@ -38,14 +48,23 @@ int main() {
         return -1;
     }
 
-    printf("Connect to server at\n");
+    printf("Connect to server\n");
+
+    // Wrap socket with SSL
+    SSL *ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, sock);
+    if (SSL_connect(ssl) <= 0) {
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
+    printf("TLS handshake successful with %s\n", SSL_get_cipher(ssl));
 
     while (1) {
         // Send message to server
         printf("You: ");
         fgets(buffer, BUFFER_SIZE, stdin); //gets input from user keyboard
         buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
-        send(sock, buffer, strlen(buffer), 0);
+        SSL_write(ssl, buffer, strlen(buffer));
 
         // Receive message from server
         //memset(buffer, 0, BUFFER_SIZE);
@@ -57,6 +76,10 @@ int main() {
         //printf("Server: %s\n", buffer);
     }
 
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
     close(sock);
+    SSL_CTX_free(ctx);
+    EVP_cleanup();
     return 0;
 }

@@ -21,16 +21,37 @@ struct sockaddr_in address;
 int addrlen = sizeof(address);
 char buffer[BUFFER_SIZE];
 
-void *handleClient(void *clientInputSocket){
+typedef struct
+{
+    /* data */
+    int client_socket;
+    SSL_CTX *ctx;
+} threadArgs;
 
-    int sock = *((int *)clientInputSocket);  // get the actual socket
+
+void *handleClient(void *args){
+    threadArgs * targs = (threadArgs*)args;
+    int sock = targs->client_socket;  // get the actual socket
     char buffer[BUFFER_SIZE];
+
+    // Wrap socket with SSL
+    SSL *ssl = SSL_new(targs->ctx);
+    SSL_set_fd(ssl, sock);
+
+    // check if SSL is indeed wrapped to sockets
+    if (SSL_accept(ssl) <= 0) {
+        ERR_print_errors_fp(stderr);
+        SSL_free(ssl);
+        close(sock);
+        free(targs); // free memory allocated for thread args
+        return NULL;
+    }
 
     while (1) {
         memset(buffer, 0, BUFFER_SIZE);
 
         // once client sends message
-        int valread = read(sock, buffer, BUFFER_SIZE);
+        int valread =  SSL_read(ssl, buffer, BUFFER_SIZE);
         if (valread <= 0) {
             printf("Client disconnected.\n");
             break;
@@ -43,6 +64,10 @@ void *handleClient(void *clientInputSocket){
         //buffer[strcspn(buffer, "\n")] = '\0'; // remove newline
         //send(sock, buffer, strlen(buffer), 0);
     }
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+    close(sock);
+    return NULL;
 }
 
 int main() {
@@ -58,8 +83,12 @@ int main() {
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }
-
-
+    // Load certificate and private key
+    if (SSL_CTX_use_certificate_file(ctx, "server.crt", SSL_FILETYPE_PEM) <= 0 ||
+        SSL_CTX_use_PrivateKey_file(ctx, "server.key", SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
 
     // creates the socket for server
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -95,14 +124,21 @@ int main() {
             int *pclient = malloc(sizeof(int));
             *pclient = client_socket;
 
+            // setting up thread args (client socket, SSL)
+            threadArgs *args = malloc(sizeof(threadArgs));
+            args->client_socket = *pclient;
+            args->ctx = ctx;
+
+
             // set client socket off to a threading
             pthread_t thread;
-            pthread_create(&thread, NULL, handleClient, pclient);
+            pthread_create(&thread, NULL, handleClient, args);
             pthread_detach(thread);
             printf("Client connected and running a thread!\n");
         }
     }
-
+    SSL_CTX_free(ctx);
+    EVP_cleanup();
     close(server_fd);
     return 0;
 }

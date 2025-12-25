@@ -12,6 +12,8 @@ server
 thread
 
 c
+server.crt
+server.key
 <<<<<<< HEAD
 
 Client
