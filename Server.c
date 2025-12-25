@@ -23,7 +23,6 @@ char buffer[BUFFER_SIZE];
 
 typedef struct
 {
-    /* data */
     int client_socket;
     SSL_CTX *ctx;
 } threadArgs;
@@ -31,12 +30,13 @@ typedef struct
 
 void *handleClient(void *args){
     threadArgs * targs = (threadArgs*)args;
-    int sock = targs->client_socket;  // get the actual socket
-    char buffer[BUFFER_SIZE];
 
-    // Wrap socket with SSL
+    // Unpacks the data given by args
+    int sock = targs->client_socket;  // get the actual socket
+    char buffer[BUFFER_SIZE]; // where the message data is stored in
+
     SSL *ssl = SSL_new(targs->ctx);
-    SSL_set_fd(ssl, sock);
+    SSL_set_fd(ssl, sock); // Wrap socket with SSL
 
     // check if SSL is indeed wrapped to sockets
     if (SSL_accept(ssl) <= 0) {
@@ -79,10 +79,13 @@ int main() {
 
     const SSL_METHOD *method = TLS_server_method(); // Server intialization for TLS
     SSL_CTX *ctx = SSL_CTX_new(method); // TLS configuration that is sepcial to this server, used for decryptina nd encrypting
+    
+    // debugging check
     if (!ctx) {
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }
+
     // Load certificate and private key
     if (SSL_CTX_use_certificate_file(ctx, "server.crt", SSL_FILETYPE_PEM) <= 0 ||
         SSL_CTX_use_PrivateKey_file(ctx, "server.key", SSL_FILETYPE_PEM) <= 0) {
@@ -128,7 +131,6 @@ int main() {
             threadArgs *args = malloc(sizeof(threadArgs));
             args->client_socket = *pclient;
             args->ctx = ctx;
-
 
             // set client socket off to a threading
             pthread_t thread;
