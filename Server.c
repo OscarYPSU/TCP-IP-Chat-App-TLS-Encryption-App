@@ -12,6 +12,9 @@
 #include <openssl/err.h>
 #include <openssl/opensslv.h>
 
+#include <signal.h>
+
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
@@ -71,7 +74,7 @@ void *handleClient(void *args){
 }
 
 int main() {
-    
+    signal(SIGPIPE, SIG_IGN);
     // intializing the OpenSSL lib (TLS)
     SSL_library_init();
     SSL_load_error_strings();
@@ -109,27 +112,22 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    // starts listening for any user client
+    if (listen(server_fd, 3) < 0) { // n = number of clients can queue to connect to server
+        perror("Listen failed");
+        exit(EXIT_FAILURE);
+    }
+    printf("SERVER STARTED LISTENING\n");
     while(1){
-        // starts listening for any user client
-        if (listen(server_fd, 3) < 0) { // n = number of clients can queue to connect to server
-            perror("Listen failed");
-            exit(EXIT_FAILURE);
-        }
-
-        printf("SERVER STARTED LISTENING\n");
 
         // Accept client
         if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
             perror("Accept failed");
-            exit(EXIT_FAILURE);
         } else {
-            // creates malloc for own memeory space for client_socket
-            int *pclient = malloc(sizeof(int));
-            *pclient = client_socket;
 
             // setting up thread args (client socket, SSL)
             threadArgs *args = malloc(sizeof(threadArgs));
-            args->client_socket = *pclient;
+            args->client_socket = client_socket;
             args->ctx = ctx;
 
             // set client socket off to a threading

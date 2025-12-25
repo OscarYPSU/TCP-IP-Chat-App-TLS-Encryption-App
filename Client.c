@@ -37,7 +37,7 @@ int main() {
     serv_addr.sin_port = htons(PORT);
 
     // Convert IPv4 address from human readable string to machine readable bytes
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) { // change cp base on server ip address (18.218.219.40 for AWS EC2 public IP)
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) { // change cp base on server ip address (18.218.236.166 for AWS EC2 public IP)
         printf("Invalid address / Address not supported\n");
         return -1;
     }
